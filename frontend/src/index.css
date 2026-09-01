@@ -1,0 +1,170 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+/* ------------------------------------------------------------------
+   Color tokens. Light is the default surface; .dark swaps the same
+   variable set. Everything downstream (Tailwind utilities, recharts
+   inline colors, raw SVG) reads from these two blocks only.
+-------------------------------------------------------------------*/
+:root {
+  --bg: #f4f5f2;
+  --surface: #ffffff;
+  --surface-2: #eef0eb;
+  --surface-3: #e4e7e0;
+  --border: #dcdfd8;
+  --border-soft: #e7e9e2;
+
+  --ink-1: #14171a;
+  --ink-2: #4c525a;
+  --ink-3: #82898f;
+
+  --brand: #16463b;
+  --brand-strong: #0f342c;
+  --brand-soft: #e3ece7;
+
+  --good: #1f7a4d;
+  --good-soft: #e4f1e8;
+  --warn: #8a5a0a;
+  --warn-soft: #f5ecd8;
+  --bad: #a13629;
+  --bad-soft: #f5e4e1;
+
+  --pitch-fill: #1e5631;
+  --pitch-line: rgba(255, 255, 255, 0.42);
+  --pitch-vignette: rgba(0, 0, 0, 0.12);
+
+  --shadow-color: 20 20 20;
+}
+
+.dark {
+  --bg: #0d1210;
+  --surface: #151b18;
+  --surface-2: #1a2119;
+  --surface-3: #212a22;
+  --border: #2a332b;
+  --border-soft: #202822;
+
+  --ink-1: #eef1ec;
+  --ink-2: #a7afa5;
+  --ink-3: #6d756a;
+
+  --brand: #4fae82;
+  --brand-strong: #6ec69b;
+  --brand-soft: #182922;
+
+  --good: #48c288;
+  --good-soft: #142a1f;
+  --warn: #d7a248;
+  --warn-soft: #2b230f;
+  --bad: #e07a6c;
+  --bad-soft: #2b1917;
+
+  --pitch-fill: #163d26;
+  --pitch-line: rgba(255, 255, 255, 0.28);
+  --pitch-vignette: rgba(0, 0, 0, 0.35);
+
+  --shadow-color: 0 0 0;
+}
+
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+
+  --color-ink-1: var(--ink-1);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink-1);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.15s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Numeric/data figures read as a data application, not marketing copy */
+.font-mono,
+.tabular-nums {
+  font-feature-settings: 'tnum' 1;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 8px;
+  border: 2px solid var(--color-bg);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-3);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.25s ease-out both;
+}

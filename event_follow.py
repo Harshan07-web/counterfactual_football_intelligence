@@ -1,131 +1,475 @@
 import json
 
-with open("data/raw/events/3857276.json", "r", encoding="utf-8") as f:
+
+# =========================================================
+# LOAD MATCH
+# =========================================================
+
+with open(
+    "data/raw/events/3857276.json",
+    "r",
+    encoding="utf-8"
+) as f:
     events = json.load(f)
 
-events_by_id = {event["id"]: event for event in events}
 
-events.sort(key=lambda x: (x["period"], x["timestamp"]))
+# =========================================================
+# SORT CHRONOLOGICALLY
+# =========================================================
 
-count = 0
-poss = 0
-events_done = []
+events.sort(
+    key=lambda x: (
+        x.get("period", 0),
+        x.get("timestamp", "")
+    )
+)
 
-with open("data/event_follow/match=3857276.txt","w",encoding="utf-8") as f2:
 
-    for i in events:
+# =========================================================
+# EVENT LOOKUP
+# =========================================================
 
-        count += 1
+events_by_id = {
+    event["id"]: event
+    for event in events
+}
 
-        id = i.get("id")
-        time_stamp = i.get("timestamp")
-        type_eve = i.get("type", {}).get("name")
 
-        possession = i.get("possession")
-        possession_team = i.get("possession_team", {}).get("name")
+# =========================================================
+# HELPER FUNCTIONS
+# =========================================================
 
-        play_pattern = i.get("play_pattern", {}).get("name")
-        p_team = i.get("team", {}).get("name")
-        p_name = i.get("player", {}).get("name")
-        p_pos = i.get("position", {}).get("name")
+def player_name(event):
 
-        location = i.get("location", [None, None])
-        p_loc_x = location[0]
-        p_loc_y = location[1]
+    return event.get(
+        "player",
+        {}
+    ).get("name", "Unknown player")
 
-        under_press = i.get("under_pressure")
-        rel_events = i.get("related_events", [])
 
-        f2.write(f"Event : {count}\n")
+def team_name(event):
 
-        if possession != poss:
-            f2.write(
-                f"POSSESSION {possession} - {possession_team}\n\n"
-            )
-            poss = possession
+    return event.get(
+        "team",
+        {}
+    ).get("name", "Unknown team")
 
-        f2.write(
-            f"{id}\n"
-            f"Time : {time_stamp}\n"
-            f"Action : {type_eve}\n"
-            f"Play pattern : {play_pattern}\n"
-            f"Team : {p_team}\n"
-            f"Player : {p_name}\n"
-            f"Position : {p_pos}\n"
-            f"Location : ({p_loc_x}, {p_loc_y})\n"
-            f"Under pressure : {under_press}\n"
+
+def event_type(event):
+
+    return event.get(
+        "type",
+        {}
+    ).get("name", "Unknown")
+
+
+def location(event):
+
+    return event.get("location")
+
+
+# =========================================================
+# BUILD POSSESSIONS
+# =========================================================
+
+possessions = {}
+
+for event in events:
+
+    possession_id = event.get("possession")
+
+    if possession_id is None:
+        continue
+
+    if possession_id not in possessions:
+
+        possessions[possession_id] = {
+            "possession": possession_id,
+            "team": event.get(
+                "possession_team",
+                {}
+            ).get("name"),
+
+            "events": []
+        }
+
+    possessions[possession_id]["events"].append(event)
+
+
+# =========================================================
+# CONVERT EVENTS INTO HIGH LEVEL ACTIONS
+# =========================================================
+
+def build_action(event, next_event=None):
+
+    e_type = event_type(event)
+
+    player = player_name(event)
+
+    action = {
+        "event_id": event.get("id"),
+        "timestamp": event.get("timestamp"),
+        "type": e_type,
+        "player": player,
+        "team": team_name(event),
+        "location": location(event)
+    }
+
+
+    # -----------------------------------------------------
+    # PASS
+    # -----------------------------------------------------
+
+    if e_type == "Pass":
+
+        pass_data = event.get(
+            "pass",
+            {}
         )
 
-        events_done.append(id)
+        recipient = pass_data.get(
+            "recipient",
+            {}
+        ).get("name")
 
-        if rel_events:
+        end_location = pass_data.get(
+            "end_location"
+        )
 
-            f2.write("    RELATED EVENTS\n")
+        outcome = pass_data.get(
+            "outcome",
+            {}
+        ).get("name")
 
-            for j in rel_events:
+        action["action"] = "pass"
 
-                if j in events_done:
-                    continue
+        action["recipient"] = recipient
 
-                related_event = events_by_id.get(j)
+        action["end_location"] = end_location
 
-                if not related_event:
-                    continue
+        action["outcome"] = (
+            outcome
+            if outcome
+            else "Complete"
+        )
 
-                related_id = related_event.get("id")
-                related_time = related_event.get("timestamp")
-                related_type = related_event.get(
-                    "type", {}
-                ).get("name")
+        action["description"] = (
+            f"{player} passes to "
+            f"{recipient or 'unknown player'}"
+        )
 
-                related_possession = related_event.get(
-                    "possession"
+
+    # -----------------------------------------------------
+    # BALL RECEIPT
+    # -----------------------------------------------------
+
+    elif e_type == "Ball Receipt*":
+
+        receipt = event.get(
+            "ball_receipt",
+            {}
+        )
+
+        outcome = receipt.get(
+            "outcome",
+            {}
+        ).get("name")
+
+        action["action"] = "receive"
+
+        action["outcome"] = outcome
+
+        action["description"] = (
+            f"{player} receives the ball"
+        )
+
+
+    # -----------------------------------------------------
+    # CARRY
+    # -----------------------------------------------------
+
+    elif e_type == "Carry":
+
+        carry_data = event.get(
+            "carry",
+            {}
+        )
+
+        end_location = carry_data.get(
+            "end_location"
+        )
+
+        under_pressure = event.get(
+            "under_pressure",
+            False
+        )
+
+        action["action"] = "carry"
+
+        action["end_location"] = end_location
+
+        action["under_pressure"] = under_pressure
+
+        if under_pressure:
+
+            action["description"] = (
+                f"{player} carries the ball "
+                f"under pressure"
+            )
+
+        else:
+
+            action["description"] = (
+                f"{player} carries the ball"
+            )
+
+
+    # -----------------------------------------------------
+    # PRESSURE
+    # -----------------------------------------------------
+
+    elif e_type == "Pressure":
+
+        action["action"] = "pressure"
+
+        action["description"] = (
+            f"{player} applies pressure"
+        )
+
+
+    # -----------------------------------------------------
+    # SHOT
+    # -----------------------------------------------------
+
+    elif e_type == "Shot":
+
+        shot_data = event.get(
+            "shot",
+            {}
+        )
+
+        outcome = shot_data.get(
+            "outcome",
+            {}
+        ).get("name")
+
+        xg = shot_data.get(
+            "statsbomb_xg"
+        )
+
+        action["action"] = "shot"
+
+        action["outcome"] = outcome
+
+        action["xg"] = xg
+
+        action["description"] = (
+            f"{player} takes a shot"
+        )
+
+
+    # -----------------------------------------------------
+    # DUEL
+    # -----------------------------------------------------
+
+    elif e_type == "Duel":
+
+        duel_data = event.get(
+            "duel",
+            {}
+        )
+
+        duel_type = duel_data.get(
+            "type",
+            {}
+        ).get("name")
+
+        outcome = duel_data.get(
+            "outcome",
+            {}
+        ).get("name")
+
+        action["action"] = "duel"
+
+        action["duel_type"] = duel_type
+
+        action["outcome"] = outcome
+
+        action["description"] = (
+            f"{player} enters a duel"
+        )
+
+
+    # -----------------------------------------------------
+    # CLEARANCE
+    # -----------------------------------------------------
+
+    elif e_type == "Clearance":
+
+        clearance = event.get(
+            "clearance",
+            {}
+        )
+
+        body_part = clearance.get(
+            "body_part",
+            {}
+        ).get("name")
+
+        action["action"] = "clearance"
+
+        action["body_part"] = body_part
+
+        action["description"] = (
+            f"{player} clears the ball"
+        )
+
+
+    # -----------------------------------------------------
+    # OTHER EVENT
+    # -----------------------------------------------------
+
+    else:
+
+        action["action"] = e_type.lower()
+
+        action["description"] = (
+            f"{player}: {e_type}"
+        )
+
+
+    return action
+
+
+# =========================================================
+# BUILD FOOTBALL SEQUENCES
+# =========================================================
+
+football_sequences = []
+
+
+for possession_id, possession in possessions.items():
+
+    raw_events = possession["events"]
+
+    sequence = {
+        "possession": possession_id,
+        "team": possession["team"],
+        "actions": []
+    }
+
+
+    for index, event in enumerate(raw_events):
+
+        next_event = None
+
+        if index + 1 < len(raw_events):
+
+            next_event = raw_events[index + 1]
+
+
+        action = build_action(
+            event,
+            next_event
+        )
+
+        sequence["actions"].append(
+            action
+        )
+
+
+    football_sequences.append(
+        sequence
+    )
+
+
+# =========================================================
+# SAVE STRUCTURED VERSION
+# =========================================================
+
+with open(
+    "data/processed/football_sequences_3857276.json",
+    "w",
+    encoding="utf-8"
+) as f:
+
+    json.dump(
+        football_sequences,
+        f,
+        indent=4,
+        ensure_ascii=False
+    )
+
+
+# =========================================================
+# CREATE HUMAN-READABLE FOOTBALL SEQUENCE
+# =========================================================
+
+with open(
+    "data/processed/football_story_3857276.txt",
+    "w",
+    encoding="utf-8"
+) as f:
+
+    for possession in football_sequences:
+
+        f.write("\n")
+        f.write("=" * 70 + "\n")
+
+        f.write(
+            f"POSSESSION {possession['possession']}"
+            f" | {possession['team']}\n"
+        )
+
+        f.write("=" * 70 + "\n\n")
+
+
+        for index, action in enumerate(
+            possession["actions"],
+            start=1
+        ):
+
+            f.write(
+                f"{index}. "
+                f"{action['description']}\n"
+            )
+
+            if action.get("location"):
+
+                f.write(
+                    f"   Location: "
+                    f"{action['location']}\n"
                 )
 
-                related_possession_team = related_event.get(
-                    "possession_team", {}
-                ).get("name")
+            if action.get("end_location"):
 
-                related_pattern = related_event.get(
-                    "play_pattern", {}
-                ).get("name")
-
-                related_team = related_event.get(
-                    "team", {}
-                ).get("name")
-
-                related_player = related_event.get(
-                    "player", {}
-                ).get("name")
-
-                related_position = related_event.get(
-                    "position", {}
-                ).get("name")
-
-                related_location = related_event.get(
-                    "location", [None, None]
+                f.write(
+                    f"   End: "
+                    f"{action['end_location']}\n"
                 )
 
-                related_x = related_location[0]
-                related_y = related_location[1]
+            if action.get("under_pressure"):
 
-                related_pressure = related_event.get(
-                    "under_pressure"
+                f.write(
+                    "   Under pressure: Yes\n"
                 )
 
-                f2.write(
-                    f"        ↓\n"
-                    f"        {related_id}\n"
-                    f"        Time : {related_time}\n"
-                    f"        Action : {related_type}\n"
-                    f"        Play pattern : {related_pattern}\n"
-                    f"        Team : {related_team}\n"
-                    f"        Player : {related_player}\n"
-                    f"        Position : {related_position}\n"
-                    f"        Location : ({related_x}, {related_y})\n"
-                    f"        Under pressure : {related_pressure}\n"
+            if action.get("outcome"):
+
+                f.write(
+                    f"   Outcome: "
+                    f"{action['outcome']}\n"
                 )
 
-                events_done.append(related_id)
+            f.write("\n")
 
-        f2.write("\n" + "-" * 70 + "\n\n")
+
+        f.write(
+            "END POSSESSION\n\n"
+        )
+
+
+print(
+    f"Created {len(football_sequences)} "
+    "football sequences."
+)

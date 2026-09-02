@@ -71,8 +71,8 @@ export default function Heatmaps() {
                   y={z.r * cellH}
                   width={cellW}
                   height={cellH}
-                  fill="#d1493c"
-                  opacity={intensity * 0.55}
+                  fill="#6d5b95"
+                  opacity={intensity * 0.6}
                 />
               );
             })}

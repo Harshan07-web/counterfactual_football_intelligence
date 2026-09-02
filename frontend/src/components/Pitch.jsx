@@ -14,7 +14,7 @@ export default function Pitch({ freezeFrame, location, endLocation, height = 340
       >
         <defs>
           <marker id="arrowHead" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill="#f2b632" />
+            <path d="M0,0 L6,3 L0,6 Z" fill="#6d5b95" />
           </marker>
         </defs>
 
@@ -48,7 +48,7 @@ export default function Pitch({ freezeFrame, location, endLocation, height = 340
         {/* opponents */}
         {opponents.map((p) => (
           <g key={p.id} transform={`translate(${p.x}, ${p.y})`}>
-            <circle r="2.1" fill="#d1493c" stroke="var(--pitch-fill)" strokeWidth="0.4" />
+            <circle r="2.1" fill="#a15364" stroke="var(--pitch-fill)" strokeWidth="0.4" />
             <text y="0.9" textAnchor="middle" fontSize="2" fill="#fff" fontWeight="700">{p.jersey}</text>
           </g>
         ))}
@@ -56,7 +56,7 @@ export default function Pitch({ freezeFrame, location, endLocation, height = 340
         {/* teammates */}
         {teammates.map((p) => (
           <g key={p.id} transform={`translate(${p.x}, ${p.y})`}>
-            <circle r="2.1" fill="#3d6fd6" stroke="var(--pitch-fill)" strokeWidth="0.4" />
+            <circle r="2.1" fill="#a082a6" stroke="var(--pitch-fill)" strokeWidth="0.4" />
             <text y="0.9" textAnchor="middle" fontSize="2" fill="#fff" fontWeight="700">{p.jersey}</text>
           </g>
         ))}
@@ -68,7 +68,7 @@ export default function Pitch({ freezeFrame, location, endLocation, height = 340
             y1={location.y}
             x2={endLocation.x}
             y2={endLocation.y}
-            stroke="#f2b632"
+            stroke="#6d5b95"
             strokeWidth="0.6"
             strokeDasharray="1.6 1"
             markerEnd="url(#arrowHead)"
@@ -78,8 +78,8 @@ export default function Pitch({ freezeFrame, location, endLocation, height = 340
         {/* selected player (ball origin) */}
         {location && (
           <g transform={`translate(${location.x}, ${location.y})`}>
-            <circle r="2.6" fill="#f2b632" stroke="var(--pitch-fill)" strokeWidth="0.5" />
-            <circle r="4" fill="none" stroke="#f2b632" strokeWidth="0.3" opacity="0.5" />
+            <circle r="2.6" fill="#6d5b95" stroke="var(--pitch-fill)" strokeWidth="0.5" />
+            <circle r="4" fill="none" stroke="#6d5b95" strokeWidth="0.3" opacity="0.5" />
           </g>
         )}
       </svg>

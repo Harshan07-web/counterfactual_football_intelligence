@@ -20,9 +20,9 @@ import {
   qualityLabel,
 } from '../data/mockData';
 
-// Low → high decision quality, muted rather than neon so it sits calmly on
-// either a white or dark card.
-const bucketColors = ['#b3483a', '#ce8a3d', '#b79a3a', '#5c9a6c', '#2f8f5b'];
+// Low → high decision quality: muted rose through to deep purple, calm
+// rather than neon so it sits quietly on either a white or dark card.
+const bucketColors = ['#a15364', '#a082a6', '#cdbed6', '#8b7cae', '#4b3f72'];
 
 function PossessionDonut({ home, away, homeLabel, awayLabel }) {
   const size = 92;

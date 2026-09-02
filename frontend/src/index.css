@@ -7,63 +7,69 @@
    inline colors, raw SVG) reads from these two blocks only.
 -------------------------------------------------------------------*/
 :root {
-  --bg: #f4f5f2;
+  --bg: #f7f2f5;
   --surface: #ffffff;
-  --surface-2: #eef0eb;
-  --surface-3: #e4e7e0;
-  --border: #dcdfd8;
-  --border-soft: #e7e9e2;
+  --surface-2: #ede7f0;
+  --surface-3: #e1d5e6;
+  --border: #cdbed6;
+  --border-soft: #e7dfeb;
 
-  --ink-1: #14171a;
-  --ink-2: #4c525a;
-  --ink-3: #82898f;
+  --ink-1: #2a2438;
+  --ink-2: #4b3f72;
+  --ink-3: #8b7690;
 
-  --brand: #16463b;
-  --brand-strong: #0f342c;
-  --brand-soft: #e3ece7;
+  --brand: #4b3f72;
+  --brand-strong: #382f56;
+  --brand-soft: #ede7f0;
 
-  --good: #1f7a4d;
-  --good-soft: #e4f1e8;
-  --warn: #8a5a0a;
-  --warn-soft: #f5ecd8;
-  --bad: #a13629;
-  --bad-soft: #f5e4e1;
+  --good: #4c7a5c;
+  --good-soft: #e6efe6;
+  --warn: #9c7a3d;
+  --warn-soft: #f2ead7;
+  --bad: #a15364;
+  --bad-soft: #f3e2e6;
 
-  --pitch-fill: #1e5631;
+  --pitch-fill: #3a2f52;
   --pitch-line: rgba(255, 255, 255, 0.42);
   --pitch-vignette: rgba(0, 0, 0, 0.12);
 
-  --shadow-color: 20 20 20;
+  --shadow-color: 32 24 40;
+
+  --accent: #6d5b95;
+  --accent-soft: #ede7f0;
 }
 
 .dark {
-  --bg: #0d1210;
-  --surface: #151b18;
-  --surface-2: #1a2119;
-  --surface-3: #212a22;
-  --border: #2a332b;
-  --border-soft: #202822;
+  --bg: #16121e;
+  --surface: #1d1826;
+  --surface-2: #241e2f;
+  --surface-3: #2c2538;
+  --border: #3a3149;
+  --border-soft: #241e30;
 
-  --ink-1: #eef1ec;
-  --ink-2: #a7afa5;
-  --ink-3: #6d756a;
+  --ink-1: #ede7f0;
+  --ink-2: #cdbed6;
+  --ink-3: #8b7690;
 
-  --brand: #4fae82;
-  --brand-strong: #6ec69b;
-  --brand-soft: #182922;
+  --brand: #a082a6;
+  --brand-strong: #cdbed6;
+  --brand-soft: #2a2338;
 
-  --good: #48c288;
-  --good-soft: #142a1f;
-  --warn: #d7a248;
-  --warn-soft: #2b230f;
-  --bad: #e07a6c;
-  --bad-soft: #2b1917;
+  --good: #6bab7f;
+  --good-soft: #1c2b21;
+  --warn: #d3ab6c;
+  --warn-soft: #2e2717;
+  --bad: #d68398;
+  --bad-soft: #2f1e26;
 
-  --pitch-fill: #163d26;
+  --pitch-fill: #2a2140;
   --pitch-line: rgba(255, 255, 255, 0.28);
   --pitch-vignette: rgba(0, 0, 0, 0.35);
 
   --shadow-color: 0 0 0;
+
+  --accent: #a082a6;
+  --accent-soft: #29223a;
 }
 
 @theme {
@@ -91,6 +97,9 @@
   --color-warn-soft: var(--warn-soft);
   --color-bad: var(--bad);
   --color-bad-soft: var(--bad-soft);
+
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
 }
 
 html,

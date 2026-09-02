@@ -129,13 +129,13 @@ export default function DecisionAnalysis() {
             />
             <div className="flex items-center gap-4 mt-3 text-[12px] text-ink-3">
               <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ background: '#3d6fd6' }} /> Teammate
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: '#a082a6' }} /> Teammate
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ background: '#d1493c' }} /> Opponent
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: '#a15364' }} /> Opponent
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ background: '#f2b632' }} /> Selected Player
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: '#6d5b95' }} /> Selected Player
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full border border-ink-3" /> Ball

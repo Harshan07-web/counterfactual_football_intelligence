@@ -1,10 +1,5 @@
 import json
 
-
-# =========================================================
-# LOAD MATCH
-# =========================================================
-
 with open(
     "data/raw/events/3857276.json",
     "r",
@@ -12,10 +7,6 @@ with open(
 ) as f:
     events = json.load(f)
 
-
-# =========================================================
-# SORT CHRONOLOGICALLY
-# =========================================================
 
 events.sort(
     key=lambda x: (
@@ -25,19 +16,11 @@ events.sort(
 )
 
 
-# =========================================================
-# EVENT LOOKUP
-# =========================================================
-
 events_by_id = {
     event["id"]: event
     for event in events
 }
 
-
-# =========================================================
-# HELPER FUNCTIONS
-# =========================================================
 
 def player_name(event):
 
@@ -68,10 +51,6 @@ def location(event):
     return event.get("location")
 
 
-# =========================================================
-# BUILD POSSESSIONS
-# =========================================================
-
 possessions = {}
 
 for event in events:
@@ -96,10 +75,6 @@ for event in events:
     possessions[possession_id]["events"].append(event)
 
 
-# =========================================================
-# CONVERT EVENTS INTO HIGH LEVEL ACTIONS
-# =========================================================
-
 def build_action(event, next_event=None):
 
     e_type = event_type(event)
@@ -114,11 +89,6 @@ def build_action(event, next_event=None):
         "team": team_name(event),
         "location": location(event)
     }
-
-
-    # -----------------------------------------------------
-    # PASS
-    # -----------------------------------------------------
 
     if e_type == "Pass":
 
@@ -159,10 +129,6 @@ def build_action(event, next_event=None):
         )
 
 
-    # -----------------------------------------------------
-    # BALL RECEIPT
-    # -----------------------------------------------------
-
     elif e_type == "Ball Receipt*":
 
         receipt = event.get(
@@ -182,11 +148,6 @@ def build_action(event, next_event=None):
         action["description"] = (
             f"{player} receives the ball"
         )
-
-
-    # -----------------------------------------------------
-    # CARRY
-    # -----------------------------------------------------
 
     elif e_type == "Carry":
 
@@ -224,10 +185,6 @@ def build_action(event, next_event=None):
             )
 
 
-    # -----------------------------------------------------
-    # PRESSURE
-    # -----------------------------------------------------
-
     elif e_type == "Pressure":
 
         action["action"] = "pressure"
@@ -236,10 +193,6 @@ def build_action(event, next_event=None):
             f"{player} applies pressure"
         )
 
-
-    # -----------------------------------------------------
-    # SHOT
-    # -----------------------------------------------------
 
     elif e_type == "Shot":
 
@@ -267,10 +220,6 @@ def build_action(event, next_event=None):
             f"{player} takes a shot"
         )
 
-
-    # -----------------------------------------------------
-    # DUEL
-    # -----------------------------------------------------
 
     elif e_type == "Duel":
 
@@ -300,10 +249,6 @@ def build_action(event, next_event=None):
         )
 
 
-    # -----------------------------------------------------
-    # CLEARANCE
-    # -----------------------------------------------------
-
     elif e_type == "Clearance":
 
         clearance = event.get(
@@ -324,11 +269,6 @@ def build_action(event, next_event=None):
             f"{player} clears the ball"
         )
 
-
-    # -----------------------------------------------------
-    # OTHER EVENT
-    # -----------------------------------------------------
-
     else:
 
         action["action"] = e_type.lower()
@@ -339,11 +279,6 @@ def build_action(event, next_event=None):
 
 
     return action
-
-
-# =========================================================
-# BUILD FOOTBALL SEQUENCES
-# =========================================================
 
 football_sequences = []
 
@@ -382,10 +317,7 @@ for possession_id, possession in possessions.items():
         sequence
     )
 
-
-# =========================================================
-# SAVE STRUCTURED VERSION
-# =========================================================
+#chained events
 
 with open(
     "data/processed/football_sequences_3857276.json",
@@ -400,10 +332,7 @@ with open(
         ensure_ascii=False
     )
 
-
-# =========================================================
-# CREATE HUMAN-READABLE FOOTBALL SEQUENCE
-# =========================================================
+#debug file for readability
 
 with open(
     "data/processed/football_story_3857276.txt",

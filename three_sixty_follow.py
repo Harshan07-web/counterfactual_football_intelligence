@@ -15,15 +15,23 @@ with open(
 )as f:
     events = json.load(f)
 
+events.sort(
+    key = lambda x:(
+        x.get("timestamp",0),
+        x.get("period","")
+    )
+)
+
 all_events = []
 for event in events:
     all_events.append(event["id"])
 
 event_not_available = 0
-for event in all_events:
-
+for event in events:
+    id = event["id"]
+    timestamp = event["timestamp"]
     for ff in ts:
-        if ff["event_uuid"] == event:
+        if ff["event_uuid"] == event["id"]:
             for i in ff["freeze_frame"]:
                 if i["teammate"] and i["actor"]:
                     plt.scatter(i["location"][0],i["location"][1],color='yellow',marker='o')
@@ -35,6 +43,6 @@ for event in all_events:
                 plt.xlim(0, 120)  
                 plt.ylim(0, 80)   
                 plt.gca().set_aspect('equal', adjustable='box')
-                plt.title(f"event {ff['event_uuid']}")
+                plt.title(f"event {timestamp}")
             plt.show()
 

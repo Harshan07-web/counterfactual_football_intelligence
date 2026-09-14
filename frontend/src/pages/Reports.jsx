@@ -1,65 +1,8 @@
-import { FileBarChart, Download } from 'lucide-react';
+import { useMemo } from 'react';
+import { Download, FileBarChart, FileText } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
-import { Card } from '../components/ui';
-import { matches, players, teams } from '../data/mockData';
+import { Card, Pill } from '../components/ui';
+import { useFootballData } from '../data/footballData';
 
-const reports = [
-  {
-    title: 'Tournament Decision Quality Summary',
-    scope: 'All 8 analyzed matches',
-    generated: '2024-04-02',
-    stat: '0.27 avg decision quality',
-  },
-  {
-    title: 'Top Underperforming Decisions',
-    scope: 'Ranked by expected-value gap',
-    generated: '2024-04-02',
-    stat: '312 decisions with better alternatives',
-  },
-  {
-    title: 'Player Comparison: Playmakers',
-    scope: `${players.length} midfielders & forwards`,
-    generated: '2024-03-29',
-    stat: 'Modric leads at 0.63',
-  },
-  {
-    title: 'Final: Argentina vs France — Full Breakdown',
-    scope: `${teams.ARG.name} vs ${teams.FRA.name}`,
-    generated: '2024-03-27',
-    stat: '1,842 decisions analyzed',
-  },
-];
-
-export default function Reports() {
-  return (
-    <div>
-      <PageHeader
-        title="Reports"
-        subtitle="Generated summaries of decision-quality analysis across matches and players"
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {reports.map((r, i) => (
-          <Card key={i}>
-            <div className="flex items-start gap-3">
-              <div className="h-9 w-9 rounded-lg bg-brand-soft text-brand flex items-center justify-center shrink-0">
-                <FileBarChart size={17} strokeWidth={2} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-ink-1">{r.title}</p>
-                <p className="text-[12.5px] text-ink-3 mt-0.5">{r.scope}</p>
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-[12px] text-ink-2 font-medium">{r.stat}</span>
-                  <span className="text-[11.5px] text-ink-3 font-mono tabular-nums">{r.generated}</span>
-                </div>
-              </div>
-            </div>
-            <button className="mt-4 w-full flex items-center justify-center gap-2 rounded-lg bg-surface-2 border border-border text-ink-1 text-[13px] font-semibold py-2 hover:bg-surface-3 transition-colors">
-              <Download size={14} /> Export PDF
-            </button>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
+export default function Reports(){const {data,loading,error}=useFootballData();const summary=useMemo(()=>{if(!data)return null;const vals=data.decisions.map(d=>d.actualValue);const avg=vals.reduce((a,b)=>a+b,0)/vals.length;const gaps=data.decisions.filter(d=>d.gap>0);const best=[...data.decisions].sort((a,b)=>b.gap-a.gap)[0];return {avg,gaps,best,actions:data.actions};},[data]);if(loading)return <div className="py-24 text-center text-ink-3">Generating report data…</div>;if(error)return <Card><p className="text-bad">{error}</p></Card>;const reportCards=[{title:'Match analysis summary',stat:`${data.decisions.length.toLocaleString()} decision points`,body:`Average model value ${summary.avg.toFixed(2)} across the supplied match.`},{title:'Counterfactual opportunity report',stat:`${summary.gaps.length.toLocaleString()} positive gaps`,body:`Largest observed gap: ${summary.best?.gap.toFixed(2)||'0.00'} for ${summary.best?.player||'—'}.`},{title:'Player decision report',stat:`${data.players.length} players`,body:`Player rankings use average model value over their actual decision points.`},{title:'Data coverage report',stat:`${data.actions.length.toLocaleString()} actions`,body:`${data.match.possessions} possession sequences with 360° context in the supplied dataset.`}];function download(){const payload={match:data.match,generated_at:new Date().toISOString(),decision_points:data.decisions.length,average_decision_value:summary.avg,positive_gaps:summary.gaps.length,largest_gap:summary.best?.gap||0,players:data.players.map(p=>({name:p.name,team:p.team,decisions:p.decisionCount,average_value:p.avgValue,better_options_pct:p.betterOptionsPct}))};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='football-iq-report.json';a.click();URL.revokeObjectURL(url)}return <div className="max-w-[1200px] mx-auto"><PageHeader title="Reports" subtitle="Live summaries generated from the current analysis dataset" action={<button onClick={download} className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand text-white px-4 py-2.5 text-[12px] font-bold"><Download size={15}/>Export JSON</button>}/><Card className="mb-5"><div className="grid grid-cols-2 lg:grid-cols-4 gap-5"><Stat label="Decision points" value={data.decisions.length.toLocaleString()}/><Stat label="Average value" value={summary.avg.toFixed(2)}/><Stat label="Positive gaps" value={summary.gaps.length.toLocaleString()}/><Stat label="360° actions" value={data.actions.length.toLocaleString()}/></div></Card><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{reportCards.map((r,i)=><Card key={r.title}><div className="flex items-start gap-3"><div className="h-10 w-10 rounded-xl bg-brand-soft text-brand flex items-center justify-center shrink-0"><FileBarChart size={17}/></div><div className="min-w-0 flex-1"><Pill tone={i===1?'warn':'brand'}>{r.stat}</Pill><h3 className="text-[14px] font-bold mt-3">{r.title}</h3><p className="text-xs text-ink-3 mt-1 leading-relaxed">{r.body}</p></div></div><button onClick={download} className="mt-5 w-full rounded-xl bg-surface-2 border border-border py-2.5 flex items-center justify-center gap-2 text-xs font-bold hover:bg-surface-3"><FileText size={14}/>Export this report</button></Card>)}</div><p className="text-[10.5px] text-ink-3 mt-5">Reports are calculated at runtime from the supplied JSON files; no placeholder match or player statistics are used.</p></div>}
+function Stat({label,value}){return <div><p className="text-[10px] uppercase tracking-wider font-bold text-ink-3">{label}</p><p className="font-mono font-bold text-xl mt-1">{value}</p></div>}

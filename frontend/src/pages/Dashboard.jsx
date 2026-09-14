@@ -1,217 +1,30 @@
-import { useMemo, useState } from 'react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Cell,
-} from 'recharts';
-import { ChevronDown } from 'lucide-react';
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { Activity, ArrowUpRight, Brain, Database, GitCompareArrows, Users } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import PageHeader from '../components/PageHeader';
-import { Card, Pill } from '../components/ui';
-import {
-  matches,
-  players,
-  teams,
-  decisionQualityDistribution,
-  qualityLabel,
-} from '../data/mockData';
+import { Card, Pill, StatTile } from '../components/ui';
+import { useFootballData, qualityLabel, formatMatchTime } from '../data/footballData';
 
-// Low → high decision quality: muted rose through to deep purple, calm
-// rather than neon so it sits quietly on either a white or dark card.
-const bucketColors = ['#a15364', '#a082a6', '#cdbed6', '#8b7cae', '#4b3f72'];
-
-function PossessionDonut({ home, away, homeLabel, awayLabel }) {
-  const size = 92;
-  const stroke = 9;
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const homeLen = (home / 100) * c;
-
-  return (
-    <div className="flex items-center gap-4">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
-          <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--color-bad)" strokeWidth={stroke} fill="none" opacity="0.85" />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            stroke="var(--color-brand)"
-            strokeWidth={stroke}
-            fill="none"
-            strokeDasharray={`${homeLen} ${c - homeLen}`}
-            strokeLinecap="butt"
-          />
-        </g>
-        <text x="50%" y="46%" textAnchor="middle" fontSize="15" fontWeight="700" fill="var(--color-ink-1)">
-          {home}%
-        </text>
-        <text x="50%" y="63%" textAnchor="middle" fontSize="8" fill="var(--color-ink-3)">
-          / {away}%
-        </text>
-      </svg>
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-[13px]">
-          <span className="h-2.5 w-2.5 rounded-sm bg-brand" />
-          <span className="font-semibold text-ink-1 font-mono tabular-nums">{home}%</span>
-          <span className="text-ink-3">{homeLabel}</span>
-        </div>
-        <div className="flex items-center gap-2 text-[13px]">
-          <span className="h-2.5 w-2.5 rounded-sm bg-bad" />
-          <span className="font-semibold text-ink-1 font-mono tabular-nums">{away}%</span>
-          <span className="text-ink-3">{awayLabel}</span>
-        </div>
-      </div>
+export default function Dashboard(){
+  const {data,loading,error}=useFootballData();
+  const distribution=useMemo(()=>{ if(!data) return []; const buckets=[['0–20',0],['20–40',0],['40–60',0],['60–80',0],['80–100',0]]; data.decisions.forEach(d=>{const v=d.actualValue; const i=v<20?0:v<40?1:v<60?2:v<80?3:4; buckets[i][1]++;}); return buckets.map(([bucket,count])=>({bucket,count,pct:data.decisions.length?Math.round(count/data.decisions.length*1000)/10:0}));},[data]);
+  const stats=useMemo(()=>{if(!data)return null;const vals=data.decisions.map(d=>d.actualValue);const avg=vals.reduce((a,b)=>a+b,0)/(vals.length||1);const gaps=data.decisions.filter(d=>d.gap>0);const passes=data.actions.filter(a=>a.action==='pass').length;return {avg,gaps: gaps.length,passes};},[data]);
+  const topPlayers=useMemo(()=>data?[...data.players].sort((a,b)=>b.avgValue-a.avgValue).slice(0,6):[],[data]);
+  if(loading)return <Loading/>; if(error)return <Error text={error}/>;
+  const teams=data.teams; const score=data.match.score;
+  return <div className="max-w-[1500px] mx-auto">
+    <PageHeader title="Match Overview" subtitle="Real event and counterfactual data from match 3857276 · 360° freeze-frame linked" action={<Link to="/decision-analysis" className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand text-white px-4 py-2.5 text-[12px] font-bold hover:bg-brand-strong"><GitCompareArrows size={15}/>Open Decision Analysis</Link>}/>
+    <Card className="mb-5 overflow-hidden"><div className="bg-brand text-white p-5 sm:p-7"><div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5"><div><p className="text-[10px] uppercase tracking-[.18em] text-white/65">Analyzed fixture</p><p className="text-xl sm:text-2xl font-bold mt-1">{teams.join(' vs ')}</p><p className="text-xs text-white/65 mt-1">Match ID {data.match.id} · {data.match.possessions} possessions</p></div><div className="flex items-center gap-3"><div className="text-right"><p className="text-[10px] text-white/60">Score</p><p className="text-3xl font-bold font-mono tabular-nums">{score[teams[0]]||0}</p></div><span className="text-white/50">—</span><div><p className="text-[10px] text-white/60">&nbsp;</p><p className="text-3xl font-bold font-mono tabular-nums">{score[teams[1]]||0}</p></div></div></div></div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-border-soft"><div className="p-4 sm:p-5"><StatTile label="Decision points" value={data.decisions.toLocaleString()} sublabel="Counterfactual-ready" tone="good"/></div><div className="p-4 sm:p-5"><StatTile label="360° linked actions" value={data.actions.toLocaleString()} sublabel="Tracked event records"/></div><div className="p-4 sm:p-5"><StatTile label="Average model value" value={stats.avg.toFixed(2)} sublabel="Across decision points"/></div><div className="p-4 sm:p-5"><StatTile label="Better alternatives" value={stats.gaps.toLocaleString()} sublabel={`${Math.round(stats.gaps/data.decisions.length*100)}% of decisions`} tone="warn"/></div></div>
+    </Card>
+    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,.7fr)] gap-5">
+      <Card title="Decision value distribution" subtitle="Actual decision value assigned by the trained model"><div className="h-[270px] sm:h-[310px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={distribution} margin={{top:10,right:10,left:-20,bottom:0}}><CartesianGrid strokeDasharray="3 3" stroke="var(--border-soft)" vertical={false}/><XAxis dataKey="bucket" tick={{fill:'var(--ink-3)',fontSize:11}} axisLine={false} tickLine={false}/><YAxis tick={{fill:'var(--ink-3)',fontSize:10}} axisLine={false} tickLine={false}/><Tooltip contentStyle={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:10,fontSize:12}} formatter={(v,n,p)=>[`${v} decisions`,p?.payload?.pct+'%']}/><Bar dataKey="count" fill="var(--brand)" radius={[6,6,0,0]} maxBarSize={54}/></BarChart></ResponsiveContainer></div></Card>
+      <Card title="Top players" subtitle="Highest average decision value"><div className="space-y-1">{topPlayers.map((p,i)=><div key={p.name} className="flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-surface-2"><span className="w-5 text-[11px] font-bold text-ink-3 font-mono">{i+1}</span><div className="h-9 w-9 rounded-full bg-brand-soft text-brand flex items-center justify-center text-[11px] font-bold">{p.name.split(' ').map(x=>x[0]).slice(0,2).join('')}</div><div className="min-w-0 flex-1"><p className="text-[12.5px] font-bold truncate">{p.name}</p><p className="text-[10.5px] text-ink-3">{p.team} · {p.decisionCount} decisions</p></div><span className="font-mono font-bold text-[12px]">{p.avgValue.toFixed(2)}</span></div>)}</div><Link to="/player-analysis" className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-surface-2 border border-border py-2.5 text-[11px] font-bold text-brand">Player analysis <ArrowUpRight size={13}/></Link></Card>
     </div>
-  );
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5"><Mini icon={Database} label="Event records" value={data.actions.toLocaleString()}/><Mini icon={Activity} label="Passes" value={stats.passes.toLocaleString()}/><Mini icon={Users} label="Players tracked" value={data.players.length}/><Mini icon={Brain} label="Alternatives generated" value={data.decisions.reduce((n,d)=>n+d.candidates.length,0).toLocaleString()}/></div>
+    <p className="text-[10.5px] text-ink-3 mt-5">Latest event: {formatMatchTime(data.actions.at(-1)?.timestamp)} · All figures on this page are calculated from the supplied JSON files.</p>
+  </div>;
 }
-
-export default function Dashboard() {
-  const [matchId, setMatchId] = useState(matches[0].id);
-  const match = useMemo(() => matches.find((m) => m.id === matchId), [matchId]);
-
-  const homeTeam = teams[match.home];
-  const awayTeam = teams[match.away];
-  const homePossession = 58;
-  const awayPossession = 42;
-
-  const topPlayers = useMemo(
-    () => [...players].sort((a, b) => b.avgDecisionQuality - a.avgDecisionQuality).slice(0, 5),
-    []
-  );
-
-  const totalDecisions = useMemo(
-    () => matches.reduce((sum, m) => sum + m.decisionsAnalyzed, 0),
-    []
-  );
-  const avgDecisionQuality = useMemo(
-    () => matches.reduce((sum, m) => sum + m.avgDecisionQuality, 0) / matches.length,
-    []
-  );
-  const qLabel = qualityLabel(avgDecisionQuality);
-
-  return (
-    <div>
-      <PageHeader
-        title="Match Overview"
-        subtitle="Decision intelligence across analyzed World Cup fixtures"
-        action={
-          <div className="relative">
-            <select
-              value={matchId}
-              onChange={(e) => setMatchId(e.target.value)}
-              className="appearance-none bg-surface-2 border border-border rounded-lg pl-3 pr-9 py-2 text-[13px] font-medium text-ink-1 outline-none focus:border-brand cursor-pointer"
-            >
-              {matches.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {teams[m.home].short} vs {teams[m.away].short} &mdash; {m.stage}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={15} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-3" />
-          </div>
-        }
-      />
-
-      {/* Top stat row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
-        <Card>
-          <p className="text-[12px] text-ink-3 font-medium mb-3">Possession</p>
-          <PossessionDonut
-            home={homePossession}
-            away={awayPossession}
-            homeLabel={homeTeam.short}
-            awayLabel={awayTeam.short}
-          />
-        </Card>
-
-        <Card>
-          <p className="text-[12px] text-ink-3 font-medium mb-2">Decision Quality (Avg)</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-semibold text-ink-1 font-mono tabular-nums tracking-tight">
-              {avgDecisionQuality.toFixed(2)}
-            </span>
-          </div>
-          <Pill tone={qLabel.tone} className="mt-2">{qLabel.label}</Pill>
-        </Card>
-
-        <Card>
-          <p className="text-[12px] text-ink-3 font-medium mb-2">Total Decisions Analyzed</p>
-          <span className="text-3xl font-semibold text-ink-1 font-mono tabular-nums tracking-tight">
-            {totalDecisions.toLocaleString()}
-          </span>
-          <p className="text-[12px] text-ink-3 mt-2">In this match: {match.decisionsAnalyzed.toLocaleString()}</p>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <Card title="Decision Quality Distribution">
-          <div className="h-64 -ml-3">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={decisionQualityDistribution} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-soft)" vertical={false} />
-                <XAxis
-                  dataKey="bucket"
-                  tick={{ fill: 'var(--color-ink-3)', fontSize: 11 }}
-                  axisLine={{ stroke: 'var(--color-border)' }}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: 'var(--color-ink-3)', fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v) => `${v}%`}
-                  width={34}
-                />
-                <Tooltip
-                  cursor={{ fill: 'var(--color-surface-2)' }}
-                  contentStyle={{
-                    background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                  labelStyle={{ color: 'var(--color-ink-2)' }}
-                  formatter={(v) => [`${v}%`, 'Share']}
-                />
-                <Bar dataKey="pct" radius={[3, 3, 0, 0]} maxBarSize={44}>
-                  {decisionQualityDistribution.map((_, i) => (
-                    <Cell key={i} fill={bucketColors[i]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <p className="text-[11.5px] text-ink-3 text-center -mt-1">Decision Quality Score</p>
-        </Card>
-
-        <Card title="Top Players by Decision Quality">
-          <ul className="divide-y divide-border-soft">
-            {topPlayers.map((p, i) => (
-              <li key={p.id} className="flex items-center gap-3 py-2.5">
-                <span className="w-4 text-[12px] font-semibold text-ink-3 font-mono tabular-nums">{i + 1}</span>
-                <div className="h-8 w-8 rounded-full bg-surface-3 border border-border flex items-center justify-center text-[11px] font-bold text-ink-2">
-                  {p.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13.5px] font-medium text-ink-1 truncate">{p.name}</p>
-                  <p className="text-[11.5px] text-ink-3">{teams[p.team].name}</p>
-                </div>
-                <span className="text-[13.5px] font-semibold text-ink-1 font-mono tabular-nums">
-                  {p.avgDecisionQuality.toFixed(2)}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <button className="mt-4 w-full rounded-lg bg-brand text-white text-[13px] font-semibold py-2.5 hover:bg-brand-strong transition-colors">
-            View Full Report
-          </button>
-        </Card>
-      </div>
-    </div>
-  );
-}
+function Mini({icon:Icon,label,value}){return <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-3"><div className="h-9 w-9 rounded-lg bg-brand-soft text-brand flex items-center justify-center"><Icon size={16}/></div><div><p className="text-[10px] uppercase tracking-wider font-bold text-ink-3">{label}</p><p className="font-mono font-bold text-lg mt-0.5">{value}</p></div></div>}
+function Loading(){return <div className="py-24 text-center text-ink-3">Loading match data…</div>}; function Error({text}){return <Card><p className="font-bold text-bad">Data load failed</p><p className="text-sm text-ink-3 mt-1">{text}</p></Card>}

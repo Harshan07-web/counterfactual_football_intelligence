@@ -1,179 +1,71 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
-/* ------------------------------------------------------------------
-   Color tokens. Light is the default surface; .dark swaps the same
-   variable set. Everything downstream (Tailwind utilities, recharts
-   inline colors, raw SVG) reads from these two blocks only.
--------------------------------------------------------------------*/
 :root {
-  --bg: #f7f2f5;
+  --bg: #f3f7f3;
   --surface: #ffffff;
-  --surface-2: #ede7f0;
-  --surface-3: #e1d5e6;
-  --border: #cdbed6;
-  --border-soft: #e7dfeb;
-
-  --ink-1: #2a2438;
-  --ink-2: #4b3f72;
-  --ink-3: #8b7690;
-
-  --brand: #4b3f72;
-  --brand-strong: #382f56;
-  --brand-soft: #ede7f0;
-
-  --good: #4c7a5c;
-  --good-soft: #e6efe6;
-  --warn: #9c7a3d;
-  --warn-soft: #f2ead7;
-  --bad: #a15364;
-  --bad-soft: #f3e2e6;
-
-  --pitch-fill: #3a2f52;
-  --pitch-line: rgba(255, 255, 255, 0.42);
-  --pitch-vignette: rgba(0, 0, 0, 0.12);
-
-  --shadow-color: 32 24 40;
-
-  --accent: #6d5b95;
-  --accent-soft: #ede7f0;
+  --surface-2: #eef5ef;
+  --surface-3: #dfece1;
+  --border: #c8d9ca;
+  --border-soft: #e2ebe3;
+  --ink-1: #16251a;
+  --ink-2: #3d5944;
+  --ink-3: #718477;
+  --brand: #176b3a;
+  --brand-strong: #0e512b;
+  --brand-soft: #e6f2e9;
+  --good: #19713d;
+  --good-soft: #e5f3e8;
+  --warn: #a06d16;
+  --warn-soft: #fbf1d8;
+  --bad: #a53d43;
+  --bad-soft: #f8e5e6;
+  --pitch-fill: #174d30;
+  --pitch-line: rgba(255,255,255,.68);
+  --accent: #239653;
+  --accent-soft: #e6f2e9;
+  --shadow-color: 20 55 31;
 }
-
 .dark {
-  --bg: #16121e;
-  --surface: #1d1826;
-  --surface-2: #241e2f;
-  --surface-3: #2c2538;
-  --border: #3a3149;
-  --border-soft: #241e30;
-
-  --ink-1: #ede7f0;
-  --ink-2: #cdbed6;
-  --ink-3: #8b7690;
-
-  --brand: #a082a6;
-  --brand-strong: #cdbed6;
-  --brand-soft: #2a2338;
-
-  --good: #6bab7f;
-  --good-soft: #1c2b21;
-  --warn: #d3ab6c;
-  --warn-soft: #2e2717;
-  --bad: #d68398;
-  --bad-soft: #2f1e26;
-
-  --pitch-fill: #2a2140;
-  --pitch-line: rgba(255, 255, 255, 0.28);
-  --pitch-vignette: rgba(0, 0, 0, 0.35);
-
-  --shadow-color: 0 0 0;
-
-  --accent: #a082a6;
-  --accent-soft: #29223a;
+  --bg: #0d1711;
+  --surface: #132018;
+  --surface-2: #19291e;
+  --surface-3: #21372a;
+  --border: #2d4935;
+  --border-soft: #21382a;
+  --ink-1: #edf7ef;
+  --ink-2: #bfd2c3;
+  --ink-3: #7e9984;
+  --brand: #5fbd7f;
+  --brand-strong: #8bd09e;
+  --brand-soft: #173523;
+  --good: #73ca8d;
+  --good-soft: #183523;
+  --warn: #d6aa55;
+  --warn-soft: #392d16;
+  --bad: #df7b80;
+  --bad-soft: #3b2023;
+  --pitch-fill: #123b25;
+  --pitch-line: rgba(255,255,255,.48);
+  --accent: #6bca8b;
+  --accent-soft: #173523;
 }
-
 @theme {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
-
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-surface-3: var(--surface-3);
-  --color-border: var(--border);
-  --color-border-soft: var(--border-soft);
-
-  --color-ink-1: var(--ink-1);
-  --color-ink-2: var(--ink-2);
-  --color-ink-3: var(--ink-3);
-
-  --color-brand: var(--brand);
-  --color-brand-strong: var(--brand-strong);
-  --color-brand-soft: var(--brand-soft);
-
-  --color-good: var(--good);
-  --color-good-soft: var(--good-soft);
-  --color-warn: var(--warn);
-  --color-warn-soft: var(--warn-soft);
-  --color-bad: var(--bad);
-  --color-bad-soft: var(--bad-soft);
-
-  --color-accent: var(--accent);
-  --color-accent-soft: var(--accent-soft);
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --color-bg: var(--bg); --color-surface: var(--surface); --color-surface-2: var(--surface-2); --color-surface-3: var(--surface-3);
+  --color-border: var(--border); --color-border-soft: var(--border-soft); --color-ink-1: var(--ink-1); --color-ink-2: var(--ink-2); --color-ink-3: var(--ink-3);
+  --color-brand: var(--brand); --color-brand-strong: var(--brand-strong); --color-brand-soft: var(--brand-soft); --color-good: var(--good); --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn); --color-warn-soft: var(--warn-soft); --color-bad: var(--bad); --color-bad-soft: var(--bad-soft); --color-accent: var(--accent); --color-accent-soft: var(--accent-soft);
 }
-
-html,
-body,
-#root {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  background: var(--color-bg);
-  color: var(--color-ink-1);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  transition: background-color 0.15s ease;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Numeric/data figures read as a data application, not marketing copy */
-.font-mono,
-.tabular-nums {
-  font-feature-settings: 'tnum' 1;
-}
-
-::-webkit-scrollbar {
-  width: 9px;
-  height: 9px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 8px;
-  border: 2px solid var(--color-bg);
-  background-clip: padding-box;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ink-3);
-}
-
-:focus-visible {
-  outline: 2px solid var(--color-brand);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    transition-duration: 0.001ms !important;
-  }
-}
-
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.animate-fade-up {
-  animation: fade-up 0.25s ease-out both;
-}
+html, body, #root { min-height: 100%; }
+body { margin:0; background:var(--bg); color:var(--ink-1); font-family:var(--font-sans); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+* { box-sizing:border-box; }
+button, select { font:inherit; }
+.tabular-nums { font-variant-numeric:tabular-nums; }
+.font-mono,.tabular-nums { font-feature-settings:'tnum' 1; }
+::-webkit-scrollbar { width:9px; height:9px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:8px; border:2px solid var(--bg); background-clip:padding-box; }
+:focus-visible { outline:2px solid var(--brand); outline-offset:2px; border-radius:5px; }
+@keyframes fade-up { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+.animate-fade-up { animation:fade-up .22s ease-out both; }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; } }

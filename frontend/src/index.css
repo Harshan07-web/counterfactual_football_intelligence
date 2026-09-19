@@ -1,71 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap');
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 :root {
-  --bg: #f3f7f3;
-  --surface: #ffffff;
-  --surface-2: #eef5ef;
-  --surface-3: #dfece1;
-  --border: #c8d9ca;
-  --border-soft: #e2ebe3;
-  --ink-1: #16251a;
-  --ink-2: #3d5944;
-  --ink-3: #718477;
-  --brand: #176b3a;
-  --brand-strong: #0e512b;
-  --brand-soft: #e6f2e9;
-  --good: #19713d;
-  --good-soft: #e5f3e8;
-  --warn: #a06d16;
-  --warn-soft: #fbf1d8;
-  --bad: #a53d43;
-  --bad-soft: #f8e5e6;
-  --pitch-fill: #174d30;
-  --pitch-line: rgba(255,255,255,.68);
-  --accent: #239653;
-  --accent-soft: #e6f2e9;
-  --shadow-color: 20 55 31;
+  --canvas: #f1f3f0;
+  --panel: #ffffff;
+  --panel-2: #f7f8f6;
+  --panel-3: #e9ece8;
+  --line: #d9ded8;
+  --line-2: #eaeee9;
+
+  --ink: #0f1512;
+  --ink-2: #4c564f;
+  --ink-3: #7f8a82;
+
+  --chrome: #142019;
+  --chrome-2: #1e2d24;
+  --chrome-line: #2b3b32;
+  --chrome-ink: #f3f6f2;
+  --chrome-ink-2: #9aada1;
+
+  --pitch: #1f6b41;
+  --pitch-line: rgba(255, 255, 255, 0.5);
+
+  --actual: #1e56a8;
+  --alt: #c98a0c;
+  --pos: #1b7a44;
+  --neg: #b03a3a;
 }
+
 .dark {
-  --bg: #0d1711;
-  --surface: #132018;
-  --surface-2: #19291e;
-  --surface-3: #21372a;
-  --border: #2d4935;
-  --border-soft: #21382a;
-  --ink-1: #edf7ef;
-  --ink-2: #bfd2c3;
-  --ink-3: #7e9984;
-  --brand: #5fbd7f;
-  --brand-strong: #8bd09e;
-  --brand-soft: #173523;
-  --good: #73ca8d;
-  --good-soft: #183523;
-  --warn: #d6aa55;
-  --warn-soft: #392d16;
-  --bad: #df7b80;
-  --bad-soft: #3b2023;
-  --pitch-fill: #123b25;
-  --pitch-line: rgba(255,255,255,.48);
-  --accent: #6bca8b;
-  --accent-soft: #173523;
+  --canvas: #0b110d;
+  --panel: #131b16;
+  --panel-2: #18211b;
+  --panel-3: #212d25;
+  --line: #27352c;
+  --line-2: #1d2821;
+
+  --ink: #e9efea;
+  --ink-2: #b1bfb5;
+  --ink-3: #78877e;
+
+  --chrome: #080d0a;
+  --chrome-2: #121b15;
+  --chrome-line: #22302a;
+  --chrome-ink: #e9efea;
+  --chrome-ink-2: #8a9b90;
+
+  --pitch: #155432;
+  --pitch-line: rgba(255, 255, 255, 0.42);
+
+  --actual: #6ba3f0;
+  --alt: #e0a92f;
+  --pos: #4fb077;
+  --neg: #d97b7b;
 }
+
 @theme {
-  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-  --color-bg: var(--bg); --color-surface: var(--surface); --color-surface-2: var(--surface-2); --color-surface-3: var(--surface-3);
-  --color-border: var(--border); --color-border-soft: var(--border-soft); --color-ink-1: var(--ink-1); --color-ink-2: var(--ink-2); --color-ink-3: var(--ink-3);
-  --color-brand: var(--brand); --color-brand-strong: var(--brand-strong); --color-brand-soft: var(--brand-soft); --color-good: var(--good); --color-good-soft: var(--good-soft);
-  --color-warn: var(--warn); --color-warn-soft: var(--warn-soft); --color-bad: var(--bad); --color-bad-soft: var(--bad-soft); --color-accent: var(--accent); --color-accent-soft: var(--accent-soft);
+  --font-sans: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-cond: 'Barlow Condensed', 'Barlow', system-ui, sans-serif;
+
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-panel-3: var(--panel-3);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-chrome: var(--chrome);
+  --color-chrome-2: var(--chrome-2);
+  --color-chrome-line: var(--chrome-line);
+  --color-chrome-ink: var(--chrome-ink);
+  --color-chrome-ink-2: var(--chrome-ink-2);
+  --color-pitch: var(--pitch);
+  --color-actual: var(--actual);
+  --color-alt: var(--alt);
+  --color-pos: var(--pos);
+  --color-neg: var(--neg);
 }
-html, body, #root { min-height: 100%; }
-body { margin:0; background:var(--bg); color:var(--ink-1); font-family:var(--font-sans); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
-* { box-sizing:border-box; }
-button, select { font:inherit; }
-.tabular-nums { font-variant-numeric:tabular-nums; }
-.font-mono,.tabular-nums { font-feature-settings:'tnum' 1; }
-::-webkit-scrollbar { width:9px; height:9px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:8px; border:2px solid var(--bg); background-clip:padding-box; }
-:focus-visible { outline:2px solid var(--brand); outline-offset:2px; border-radius:5px; }
-@keyframes fade-up { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-.animate-fade-up { animation:fade-up .22s ease-out both; }
-@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; } }
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@layer base {
+  button,
+  select,
+  input {
+    font: inherit;
+    color: inherit;
+  }
+}
+/* Condensed grotesk for scorelines, column headers and large figures. */
+.cond {
+  font-family: var(--font-cond);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Horizontal tab rails scroll on narrow screens without a visible bar. */
+.rail {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border: 3px solid var(--canvas);
+  background-clip: padding-box;
+  border-radius: 6px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--alt);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

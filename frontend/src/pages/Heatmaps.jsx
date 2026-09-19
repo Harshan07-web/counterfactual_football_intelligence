@@ -1,9 +1,176 @@
 import { useMemo, useState } from 'react';
-import { ChevronDown, Map, MousePointer2 } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import { Card, Pill } from '../components/ui';
+import { Panel, Toolbar, Select, Loading, DataError } from '../components/ui';
 import { useFootballData } from '../data/footballData';
 
-function HeatPitch({locations}){const cols=12,rows=8,w=120/cols,h=80/rows;const cells=Array.from({length:cols*rows},(_,i)=>({x:i%cols,y:Math.floor(i/cols),n:0}));locations.forEach(([x,y])=>{const c=Math.max(0,Math.min(cols-1,Math.floor(x/w)));const r=Math.max(0,Math.min(rows-1,Math.floor(y/h)));cells[r*cols+c].n++;});const max=Math.max(1,...cells.map(c=>c.n));return <svg viewBox="0 0 120 80" className="w-full h-auto min-h-[300px] sm:min-h-[440px]" preserveAspectRatio="xMidYMid meet"><rect width="120" height="80" fill="var(--pitch-fill)"/>{cells.map((c,i)=><rect key={i} x={c.x*w} y={c.y*h} width={w} height={h} fill="var(--accent)" opacity={c.n?0.08+0.75*c.n/max:0.02}/>)}<g fill="none" stroke="var(--pitch-line)" strokeWidth=".35"><rect x=".3" y=".3" width="119.4" height="79.4"/><line x1="60" y1="0" x2="60" y2="80"/><circle cx="60" cy="40" r="9.15"/><circle cx="60" cy="40" r=".7" fill="var(--pitch-line)"/><rect x="0" y="18" width="18" height="44"/><rect x="0" y="30" width="6" height="20"/><rect x="102" y="18" width="18" height="44"/><rect x="114" y="30" width="6" height="20"/></g></svg>}
-export default function Heatmaps(){const {data,loading,error}=useFootballData();const [player,setPlayer]=useState('');const selected=useMemo(()=>data?.players.find(p=>p.name===player)||data?.players[0],[data,player]);if(loading)return <div className="py-24 text-center text-ink-3">Loading positional data…</div>;if(error)return <Card><p className="text-bad">{error}</p></Card>;const locations=selected?.locations||[];return <div className="max-w-[1250px] mx-auto"><PageHeader title="Heatmaps" subtitle="Actual event locations from the 360°-linked match data" action={<div className="relative"><select value={selected?.name||''} onChange={e=>setPlayer(e.target.value)} className="w-full sm:w-auto appearance-none bg-surface border border-border rounded-xl pl-3 pr-9 py-2.5 text-[12px] font-bold"><option value="">Select player</option>{data.players.map(p=><option key={p.name}>{p.name}</option>)}</select><ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-ink-3"/></div>}/><div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-5"><Card title={`${selected.name} · positional density`} subtitle={`${locations.length} recorded on-ball locations`}><div className="rounded-xl overflow-hidden border border-border"><HeatPitch locations={locations}/></div><div className="mt-3 flex items-center justify-between text-[10px] text-ink-3"><span>Own goal ←</span><span>→ Opponent goal</span></div></Card><div className="space-y-5"><Card><div className="flex items-start gap-3"><div className="h-10 w-10 rounded-xl bg-brand-soft text-brand flex items-center justify-center"><MousePointer2 size={18}/></div><div><p className="font-bold text-sm">Actual locations</p><p className="text-xs text-ink-3 mt-1 leading-relaxed">Every plotted point comes from an event location in the supplied sequence data. No synthetic positions are generated here.</p></div></div></Card><Card title="Player activity"><div className="space-y-3"><Row label="Recorded actions" value={selected.actions.length}/><Row label="Decision points" value={selected.decisionCount}/><Row label="Passes" value={selected.actions.filter(a=>a.action==='pass').length}/><Row label="Carries" value={selected.actions.filter(a=>a.action==='carry').length}/></div></Card><Card><div className="flex items-center gap-2"><Map size={15} className="text-brand"/><Pill tone="brand">360° POSITION DATA</Pill></div><p className="text-[11px] text-ink-3 mt-2">Heat intensity represents the number of recorded event locations in each pitch zone.</p></Card></div></div></div>}
-function Row({label,value}){return <div className="flex justify-between border-b border-border-soft last:border-0 pb-2 last:pb-0"><span className="text-xs text-ink-3">{label}</span><span className="font-mono font-bold text-xs">{value}</span></div>}
+const COLS = 12;
+const ROWS = 8;
+
+function HeatPitch({ locations }) {
+  const cells = useMemo(() => {
+    const cellW = 120 / COLS;
+    const cellH = 80 / ROWS;
+    const grid = Array.from({ length: COLS * ROWS }, (_, i) => ({
+      x: (i % COLS) * cellW,
+      y: Math.floor(i / COLS) * cellH,
+      n: 0,
+    }));
+    for (const [x, y] of locations) {
+      const c = Math.max(0, Math.min(COLS - 1, Math.floor(x / cellW)));
+      const r = Math.max(0, Math.min(ROWS - 1, Math.floor(y / cellH)));
+      grid[r * COLS + c].n += 1;
+    }
+    const max = Math.max(1, ...grid.map((g) => g.n));
+    return { grid, max, cellW, cellH };
+  }, [locations]);
+
+  return (
+    <svg viewBox="0 0 120 80" className="block h-auto w-full" preserveAspectRatio="xMidYMid meet">
+      <rect width="120" height="80" fill="var(--pitch)" />
+
+      {cells.grid.map((c, i) => (
+        <rect
+          key={i}
+          x={c.x}
+          y={c.y}
+          width={cells.cellW}
+          height={cells.cellH}
+          fill="#ffffff"
+          opacity={c.n ? 0.06 + 0.62 * (c.n / cells.max) : 0}
+        />
+      ))}
+
+      <g stroke="var(--pitch-line)" strokeWidth="0.35" fill="none">
+        <rect x="0.4" y="0.4" width="119.2" height="79.2" />
+        <line x1="60" y1="0.4" x2="60" y2="79.6" />
+        <circle cx="60" cy="40" r="9.15" />
+        <rect x="0.4" y="18" width="17.6" height="44" />
+        <rect x="0.4" y="30" width="5.6" height="20" />
+        <rect x="102" y="18" width="17.6" height="44" />
+        <rect x="114" y="30" width="5.6" height="20" />
+      </g>
+      <circle cx="60" cy="40" r="0.45" fill="var(--pitch-line)" />
+    </svg>
+  );
+}
+
+export default function Heatmaps() {
+  const { data, loading, error } = useFootballData();
+  const [team, setTeam] = useState('all');
+  const [name, setName] = useState('');
+
+  const roster = useMemo(() => {
+    if (!data) return [];
+    return data.players.filter((p) => team === 'all' || p.team === team);
+  }, [data, team]);
+
+  const player = useMemo(() => roster.find((p) => p.name === name) || roster[0], [roster, name]);
+
+  if (loading) return <Loading what="positional data" />;
+  if (error) return <DataError message={error} />;
+  if (!player) {
+    return (
+      <div>
+        <Toolbar title="Heatmaps" />
+        <Panel>
+          <p className="text-[13.5px] text-ink-2">No tracked players in this team.</p>
+        </Panel>
+      </div>
+    );
+  }
+
+  const zones = [
+    ['Defensive third', player.locations.filter(([x]) => x < 40).length],
+    ['Middle third', player.locations.filter(([x]) => x >= 40 && x < 80).length],
+    ['Final third', player.locations.filter(([x]) => x >= 80).length],
+  ];
+  const totalLocations = player.locations.length || 1;
+
+  return (
+    <div>
+      <Toolbar title="Heatmaps" meta="On-ball event locations taken straight from the match feed">
+        <Select value={team} onChange={(e) => setTeam(e.target.value)} label="Filter by team">
+          <option value="all">Both teams</option>
+          {data.teams.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </Select>
+        <Select value={player.name} onChange={(e) => setName(e.target.value)} label="Select player">
+          {roster.map((p) => (
+            <option key={p.name}>{p.name}</option>
+          ))}
+        </Select>
+      </Toolbar>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]">
+        <Panel padded={false}>
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line-2 px-4 py-2.5">
+            <h2 className="cond text-[17px] leading-tight text-ink">{player.name}</h2>
+            <p className="num text-[12.5px] text-ink-3">
+              {player.locations.length} on-ball locations
+            </p>
+          </div>
+
+          <HeatPitch locations={player.locations} />
+
+          <div className="flex items-center justify-between border-t border-line-2 px-4 py-2 text-[12px] text-ink-3">
+            <span>Own goal</span>
+            <span className="flex items-center gap-2">
+              Attacking direction
+              <svg width="42" height="8" aria-hidden="true">
+                <line x1="0" y1="4" x2="34" y2="4" stroke="currentColor" strokeWidth="1" />
+                <path d="M34 1 L41 4 L34 7 Z" fill="currentColor" />
+              </svg>
+            </span>
+            <span>Opponent goal</span>
+          </div>
+        </Panel>
+
+        <div className="space-y-4">
+          <Panel title="Territory">
+            <div className="space-y-3">
+              {zones.map(([label, count]) => (
+                <div key={label}>
+                  <div className="flex items-baseline justify-between text-[12.5px]">
+                    <span className="text-ink-2">{label}</span>
+                    <span className="num text-ink-3">
+                      {count} · {((count / totalLocations) * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <span className="mt-1 block h-[6px] bg-panel-3">
+                    <span
+                      className="block h-full bg-ink-2"
+                      style={{ width: `${(count / totalLocations) * 100}%` }}
+                    />
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Panel>
+
+          <Panel title="Involvement" padded={false}>
+            <dl className="divide-y divide-line-2">
+              {[
+                ['Events on the ball', player.actions.length],
+                ['Decisions modelled', player.decisionCount],
+                ['Passes', player.actions.filter((a) => a.action === 'pass').length],
+                ['Carries', player.actions.filter((a) => a.action === 'carry').length],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-baseline justify-between px-4 py-2">
+                  <dt className="text-[12.5px] text-ink-3">{label}</dt>
+                  <dd className="num text-[13.5px] font-medium">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </Panel>
+
+          <p className="text-[12px] leading-relaxed text-ink-3">
+            Shading is the share of this player&rsquo;s recorded events falling in each zone of the
+            pitch. Nothing is smoothed or interpolated.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

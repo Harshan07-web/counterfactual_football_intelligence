@@ -1,9 +1,222 @@
 import { useMemo, useState } from 'react';
-import { ChevronDown, TrendingUp, AlertTriangle, Target } from 'lucide-react';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
-import PageHeader from '../components/PageHeader';
-import { Card, Pill } from '../components/ui';
-import { useFootballData, qualityLabel, formatMatchTime } from '../data/footballData';
+import { Link } from 'react-router-dom';
+import { Panel, Toolbar, Select, Th, Td, Loading, DataError, Tag } from '../components/ui';
+import { useFootballData, formatMatchTime, initials, qualityLabel } from '../data/footballData';
 
-export default function PlayerAnalysis(){const {data,loading,error}=useFootballData();const [name,setName]=useState('');const player=useMemo(()=>data?.players.find(p=>p.name===name)||data?.players[0],[data,name]);if(loading)return <div className="py-24 text-center text-ink-3">Loading player data…</div>;if(error)return <Card><p className="text-bad">{error}</p></Card>;const decisions=player.decisions;const q=qualityLabel(player.avgValue);const chart=decisions.slice(-20).map((d,i)=>({i:i+1,value:d.actualValue}));const actionCounts=Object.entries(decisions.reduce((m,d)=>{const k=d.actual?.type||'other';m[k]=(m[k]||0)+1;return m;},{})).sort((a,b)=>b[1]-a[1]);return <div className="max-w-[1300px] mx-auto"><PageHeader title="Player Analysis" subtitle="Performance calculated from actual event and counterfactual records" action={<div className="relative"><select value={player.name} onChange={e=>setName(e.target.value)} className="w-full sm:w-auto appearance-none bg-surface border border-border rounded-xl pl-3 pr-9 py-2.5 text-[12px] font-bold">{data.players.map(p=><option key={p.name}>{p.name}</option>)}</select><ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-ink-3"/></div>}/><Card className="mb-5"><div className="flex flex-col lg:flex-row lg:items-center gap-5"><div className="flex items-center gap-3 flex-1"><div className="h-14 w-14 rounded-2xl bg-brand text-white flex items-center justify-center font-bold">{player.name.split(' ').map(x=>x[0]).slice(0,2).join('')}</div><div><h2 className="text-lg font-bold">{player.name}</h2><p className="text-xs text-ink-3">{player.team} · {player.actions.length} tracked actions</p></div></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-4"><Metric label="Avg value" value={player.avgValue.toFixed(2)} tone={q.tone}/><Metric label="Decisions" value={player.decisionCount}/><Metric label="Better options" value={`${player.betterOptionsPct.toFixed(1)}%`} tone="warn"/><Metric label="Actions" value={player.actions.length}/></div></div></Card><div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.2fr)_minmax(280px,.8fr)] gap-5"><Card title="Decision value over events" subtitle="Last 20 decision points for this player"><div className="h-[270px]"><ResponsiveContainer width="100%" height="100%"><LineChart data={chart} margin={{top:10,right:10,left:-20,bottom:0}}><CartesianGrid strokeDasharray="3 3" stroke="var(--border-soft)" vertical={false}/><XAxis dataKey="i" tick={{fill:'var(--ink-3)',fontSize:10}} axisLine={false} tickLine={false}/><YAxis tick={{fill:'var(--ink-3)',fontSize:10}} axisLine={false} tickLine={false}/><Tooltip contentStyle={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:10,fontSize:12}}/><Line type="monotone" dataKey="value" stroke="var(--brand)" strokeWidth={2.5} dot={false}/></LineChart></ResponsiveContainer></div></Card><Card title="Action profile"><div className="space-y-2.5">{actionCounts.slice(0,7).map(([k,v])=><div key={k} className="flex items-center gap-2"><div className="w-24 text-[11px] text-ink-2 capitalize">{k}</div><div className="flex-1 h-2 rounded-full bg-surface-3 overflow-hidden"><div className="h-full bg-brand rounded-full" style={{width:`${v/Math.max(1,actionCounts[0][1])*100}%`}}/></div><span className="font-mono text-[11px] font-bold w-8 text-right">{v}</span></div>)}</div></Card></div><Card className="mt-5" title="Decision history" subtitle="Actual decisions with their model value and counterfactual gap"><div className="overflow-x-auto"><table className="w-full min-w-[650px] text-left"><thead><tr className="text-[10px] uppercase tracking-wider text-ink-3 border-b border-border-soft"><th className="py-2">Time</th><th>Action</th><th>Outcome</th><th>Value</th><th>Gap</th><th>Review</th></tr></thead><tbody>{decisions.slice(-12).reverse().map(d=><tr key={d.event_id} className="border-b border-border-soft last:border-0 text-xs"><td className="py-3 font-mono">{formatMatchTime(d.timestamp)}</td><td className="font-semibold capitalize">{d.actual?.type||'—'}</td><td className="text-ink-3">{d.actual?.outcome||'—'}</td><td className="font-mono font-bold">{d.actualValue.toFixed(2)}</td><td className={`font-mono font-bold ${d.gap>0?'text-warn':'text-good'}`}>{d.gap>0?'+':''}{d.gap.toFixed(2)}</td><td><a href={`/decision-analysis?event=${d.event_id}`} className="text-brand font-bold">Open</a></td></tr>)}</tbody></table></div></Card><div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5"><Info icon={TrendingUp} title="Average value" body={`${player.avgValue.toFixed(2)} across ${player.decisionCount} modelled decisions.`}/><Info icon={AlertTriangle} title="Counterfactual gaps" body={`${player.betterOptions} decisions have at least one generated alternative above the actual value.`}/><Info icon={Target} title="Evidence" body="All player metrics are derived from the supplied event and counterfactual JSON."/></div></div>}
-function Metric({label,value,tone}){return <div><p className="text-[10px] uppercase tracking-wider font-bold text-ink-3">{label}</p><p className={`font-mono font-bold text-xl mt-1 ${tone==='warn'?'text-warn':''}`}>{value}</p></div>};function Info({icon:Icon,title,body}){return <Card><Icon size={17} className="text-brand"/><p className="font-bold text-xs mt-3">{title}</p><p className="text-[11px] text-ink-3 mt-1 leading-relaxed">{body}</p></Card>}
+/* Small inline chart: one bar per decision in match order. Dense enough to
+   show a run of poor decisions, small enough to sit inside a panel header. */
+function ValueTrace({ decisions }) {
+  const recent = decisions.slice(-40);
+  if (!recent.length) return null;
+
+  return (
+    <div className="flex h-[92px] items-end gap-[2px]">
+      {recent.map((d) => (
+        <div
+          key={d.id}
+          className="flex-1 bg-ink-2"
+          style={{ height: `${Math.max(2, d.actualValue)}%`, opacity: d.gap > 0 ? 0.45 : 1 }}
+          title={`${formatMatchTime(d.timestamp)} — ${d.actualValue.toFixed(1)}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+export default function PlayerAnalysis() {
+  const { data, loading, error } = useFootballData();
+  const [team, setTeam] = useState('all');
+  const [name, setName] = useState('');
+
+  const squad = useMemo(() => {
+    if (!data) return [];
+    return data.players
+      .filter((p) => team === 'all' || p.team === team)
+      .filter((p) => p.decisionCount > 0)
+      .sort((a, b) => b.decisionCount - a.decisionCount);
+  }, [data, team]);
+
+  const player = useMemo(
+    () => squad.find((p) => p.name === name) || squad[0] || null,
+    [squad, name]
+  );
+
+  if (loading) return <Loading what="player data" />;
+  if (error) return <DataError message={error} />;
+  if (!player) {
+    return (
+      <div>
+        <Toolbar title="Players" />
+        <Panel>
+          <p className="text-[13.5px] text-ink-2">No players with modelled decisions in this team.</p>
+        </Panel>
+      </div>
+    );
+  }
+
+  const quality = qualityLabel(player.avgValue);
+
+  const actionMix = Object.entries(
+    player.decisions.reduce((acc, d) => {
+      const key = d.actual?.type || 'other';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {})
+  ).sort((a, b) => b[1] - a[1]);
+
+  const maxMix = actionMix[0]?.[1] || 1;
+
+  return (
+    <div>
+      <Toolbar title="Players" meta="Ranked by the number of decisions the model could score">
+        <Select value={team} onChange={(e) => setTeam(e.target.value)} label="Filter by team">
+          <option value="all">Both teams</option>
+          {data.teams.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </Select>
+      </Toolbar>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(300px,380px)_minmax(0,1fr)]">
+        <Panel padded={false} className="lg:max-h-[720px] lg:overflow-y-auto">
+          <table className="w-full border-collapse">
+            <thead className="sticky top-0 bg-panel">
+              <tr>
+                <Th>Player</Th>
+                <Th align="right">Dec</Th>
+                <Th align="right">Mean</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {squad.map((p) => {
+                const active = p.name === player.name;
+                return (
+                  <tr
+                    key={p.name}
+                    onClick={() => setName(p.name)}
+                    className={`cursor-pointer ${active ? 'bg-panel-3' : 'hover:bg-panel-2'}`}
+                  >
+                    <Td>
+                      <span className="block truncate font-medium">{p.name}</span>
+                      <span className="block text-[11.5px] text-ink-3">{p.team}</span>
+                    </Td>
+                    <Td align="right" className="text-ink-3">
+                      {p.decisionCount}
+                    </Td>
+                    <Td align="right" className="font-semibold">
+                      {p.avgValue.toFixed(1)}
+                    </Td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Panel>
+
+        <div className="space-y-4">
+          <Panel padded={false}>
+            <div className="flex flex-wrap items-center gap-4 border-b border-line-2 p-4">
+              <span className="cond flex h-12 w-12 items-center justify-center rounded-full bg-panel-3 text-[16px] text-ink-2">
+                {initials(player.name)}
+              </span>
+              <div className="min-w-0">
+                <h2 className="cond text-[22px] leading-tight text-ink">{player.name}</h2>
+                <p className="text-[12.5px] text-ink-3">
+                  {player.team} — {player.actions.length} events on the ball
+                </p>
+              </div>
+              <div className="ml-auto">
+                <Tag tone={quality.tone}>{quality.label} decision making</Tag>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 divide-x divide-line-2 sm:grid-cols-4">
+              {[
+                ['Mean value', player.avgValue.toFixed(1)],
+                ['Decisions', player.decisionCount],
+                ['Better option', `${player.betterOptionsPct.toFixed(0)}%`],
+                ['Mean gap', player.avgGap.toFixed(1)],
+              ].map(([label, value]) => (
+                <div key={label} className="p-4">
+                  <div className="cond num text-[24px] leading-none text-ink">{value}</div>
+                  <div className="mt-1 text-[12px] text-ink-3">{label}</div>
+                </div>
+              ))}
+            </div>
+          </Panel>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Panel title="Decision value in sequence" meta="Last 40 decisions, faded where a better option existed">
+              <ValueTrace decisions={player.decisions} />
+            </Panel>
+
+            <Panel title="Action mix">
+              <div className="space-y-2">
+                {actionMix.slice(0, 6).map(([type, count]) => (
+                  <div key={type} className="flex items-center gap-3">
+                    <span className="w-24 shrink-0 truncate text-[12.5px] capitalize text-ink-2">
+                      {type}
+                    </span>
+                    <span className="h-[6px] flex-1 bg-panel-3">
+                      <span
+                        className="block h-full bg-ink-2"
+                        style={{ width: `${(count / maxMix) * 100}%` }}
+                      />
+                    </span>
+                    <span className="num w-8 text-right text-[12.5px] text-ink-3">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          </div>
+
+          <Panel title="Decision log" meta="Most recent first" padded={false}>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] border-collapse">
+                <thead>
+                  <tr>
+                    <Th className="w-14">Min</Th>
+                    <Th>Action</Th>
+                    <Th>Outcome</Th>
+                    <Th align="right">Value</Th>
+                    <Th align="right">Gap</Th>
+                    <Th align="right" className="w-16" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...player.decisions]
+                    .reverse()
+                    .slice(0, 14)
+                    .map((d) => (
+                      <tr key={d.id} className="hover:bg-panel-2">
+                        <Td className="num text-ink-3">{formatMatchTime(d.timestamp)}</Td>
+                        <Td className="capitalize">{d.actual?.type || '—'}</Td>
+                        <Td className="text-ink-3">{d.actual?.outcome || '—'}</Td>
+                        <Td align="right" className="font-semibold">
+                          {d.actualValue.toFixed(1)}
+                        </Td>
+                        <Td align="right" className={d.gap > 0 ? 'text-alt' : 'text-ink-3'}>
+                          {d.gap > 0 ? '+' : ''}
+                          {d.gap.toFixed(1)}
+                        </Td>
+                        <Td align="right">
+                          <Link
+                            to={`/decision-analysis?event=${d.id}`}
+                            className="text-[12.5px] font-medium text-ink-2 hover:text-alt"
+                          >
+                            View
+                          </Link>
+                        </Td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,6 +1,80 @@
-import { Database, GitBranch, Brain, GitCompareArrows, CheckCircle2 } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import { Card, Pill } from '../components/ui';
+import { Panel, Toolbar, Loading, DataError } from '../components/ui';
 import { useFootballData } from '../data/footballData';
 
-export default function About(){const {data,loading,error}=useFootballData();if(loading)return <div className="py-24 text-center text-ink-3">Loading project data…</div>;if(error)return <Card><p className="text-bad">{error}</p></Card>;const stages=[{icon:Database,title:'Data ingestion',body:`The current build reads ${data.actions.length.toLocaleString()} event actions from the supplied sequence file and ${data.decisions.length.toLocaleString()} counterfactual decision records.`},{icon:GitBranch,title:'Sequence reconstruction',body:`The sequence file contains ${data.match.possessions} possession sequences with event-to-event context and 360° teammate/opponent positions.`},{icon:Brain,title:'Value model',body:'The trained decision-value model scores the actual decision and generated candidate states. The frontend displays those saved model outputs rather than inventing scores.'},{icon:GitCompareArrows,title:'Counterfactual analysis',body:'Each decision can be compared with generated target locations. The interface makes the actual route and selected alternative visible on the same pitch.'}];return <div className="max-w-[1100px] mx-auto"><PageHeader title="About" subtitle="Football IQ · explainable counterfactual decision analysis"/><Card className="mb-5 overflow-hidden"><div className="bg-brand text-white p-6 sm:p-8"><Pill tone="good" className="!bg-white/10 !text-white !border-white/20">LIVE DATASET</Pill><h2 className="text-2xl sm:text-3xl font-bold mt-3">From match events to decision intelligence.</h2><p className="text-sm text-white/70 mt-2 max-w-2xl leading-relaxed">The application links on-ball events with 360° positional context, reconstructs decision points, and compares the actual action with model-scored alternatives.</p></div><div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-border-soft">{[[data.actions.length,'event actions'],[data.match.possessions,'possessions'],[data.decisions.length,'decision points'],[data.players.length,'players']].map(([v,l])=><div className="p-5" key={l}><p className="text-2xl font-bold font-mono">{Number(v).toLocaleString()}</p><p className="text-[10px] uppercase tracking-wider text-ink-3 font-bold mt-1">{l}</p></div>)}</div></Card><div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{stages.map(({icon:Icon,title,body})=><Card key={title}><div className="h-10 w-10 rounded-xl bg-brand-soft text-brand flex items-center justify-center"><Icon size={18}/></div><h3 className="font-bold text-sm mt-4">{title}</h3><p className="text-xs text-ink-3 mt-1.5 leading-relaxed">{body}</p></Card>)}</div><Card className="mt-5"><div className="flex items-start gap-3"><CheckCircle2 className="text-good mt-0.5" size={18}/><div><p className="font-bold text-sm">Current frontend status</p><p className="text-xs text-ink-3 mt-1 leading-relaxed">All analytical pages now consume the supplied football JSON data. Dashboard, matches, player analysis, heatmaps, reports and decision analysis are data-driven; there are no synthetic player, match or heatmap values in the UI.</p></div></div></Card></div>}
+export default function About() {
+  const { data, loading, error } = useFootballData();
+
+  if (loading) return <Loading what="project data" />;
+  if (error) return <DataError message={error} />;
+
+  /* A numbered list is right here: this genuinely is a pipeline, and each
+     stage only makes sense after the one before it. */
+  const stages = [
+    [
+      'Link events to positions',
+      `Each on-ball event is matched to its 360° freeze frame through the event id, giving the positions of every tracked teammate and opponent at that instant. ${data.match.actions.toLocaleString()} events carry that context in this match.`,
+    ],
+    [
+      'Rebuild possessions',
+      `Events are chained back into ${data.match.possessions} possession sequences, so a pass is read together with the carry that set it up and the pressure applied to it.`,
+    ],
+    [
+      'Score what happened',
+      'The value model scores the action the player chose, given the state of the pitch at that moment. The interface shows the saved model output; it does not compute a score of its own.',
+    ],
+    [
+      'Generate the alternatives',
+      `For ${data.match.decisions.toLocaleString()} decision points, plausible alternative passes are generated from the same freeze frame and scored the same way. The difference between the best alternative and the actual action is the decision gap.`,
+    ],
+  ];
+
+  return (
+    <div>
+      <Toolbar
+        title="How this works"
+        meta="Football IQ estimates what was available to a player at the moment they had the ball"
+      />
+
+      <Panel className="mb-4">
+        <p className="max-w-[68ch] text-[14px] leading-relaxed text-ink-2">
+          A decision gap is not a mistake. It says the model rated another option more highly given
+          what it could see, which is a partial view: it has positions, not intent, fatigue, the
+          shout from a teammate, or what the player knew about the opponent in front of them. Read
+          it as a prompt to look at the clip, not as a verdict.
+        </p>
+      </Panel>
+
+      <Panel padded={false}>
+        <ol className="divide-y divide-line-2">
+          {stages.map(([title, body], i) => (
+            <li key={title} className="flex gap-4 p-4">
+              <span className="cond num w-6 shrink-0 text-[20px] leading-none text-ink-3">
+                {i + 1}
+              </span>
+              <div>
+                <h3 className="cond text-[16px] leading-tight text-ink">{title}</h3>
+                <p className="mt-1 max-w-[64ch] text-[13.5px] leading-relaxed text-ink-2">{body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </Panel>
+
+      <Panel className="mt-4" title="Data in this build">
+        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[
+            ['Events', data.match.actions.toLocaleString()],
+            ['Possessions', data.match.possessions.toLocaleString()],
+            ['Decision points', data.match.decisions.toLocaleString()],
+            ['Players', data.players.length],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dd className="cond num text-[24px] leading-none text-ink">{value}</dd>
+              <dt className="mt-1 text-[12px] text-ink-3">{label}</dt>
+            </div>
+          ))}
+        </dl>
+      </Panel>
+    </div>
+  );
+}

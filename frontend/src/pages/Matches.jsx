@@ -1,8 +1,70 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Database, GitCompareArrows } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import { Card, Pill } from '../components/ui';
-import { useFootballData } from '../data/footballData';
+import { ChevronRight } from 'lucide-react';
+import { Panel, Toolbar, Tag, Th, Td, Loading, DataError } from '../components/ui';
+import { useFootballData, teamCode } from '../data/footballData';
 
-export default function Matches(){const {data,loading,error}=useFootballData(); if(loading)return <div className="py-24 text-center text-ink-3">Loading match data…</div>;if(error)return <Card><p className="text-bad font-bold">{error}</p></Card>;const m=data.match;return <div className="max-w-[1200px] mx-auto"><PageHeader title="Matches" subtitle="Fixtures available in the current analysis dataset"/><Card className="overflow-hidden"><div className="p-4 sm:p-6 border-b border-border-soft bg-surface-2"><div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"><div><Pill tone="good">360° DATA AVAILABLE</Pill><h2 className="text-xl sm:text-2xl font-bold mt-2">{m.teams[0]} <span className="text-ink-3 mx-2">vs</span> {m.teams[1]}</h2><p className="text-xs text-ink-3 mt-1">Match {m.id} · {m.possessions} possessions reconstructed</p></div><Link to="/decision-analysis" className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand text-white px-4 py-2.5 text-[12px] font-bold"><GitCompareArrows size={15}/>Analyze decisions</Link></div></div><div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border-soft"><Metric label="Score" value={`${m.score[m.teams[0]]||0} — ${m.score[m.teams[1]]||0}`}/><Metric label="Actions" value={m.actions.toLocaleString()}/><Metric label="Decision points" value={m.decisions.toLocaleString()}/><Metric label="Possessions" value={m.possessions.toLocaleString()}/></div><div className="p-4 sm:p-6"><div className="flex items-center gap-3 text-xs text-ink-3"><Database size={15} className="text-brand"/>One match is currently present in the supplied sequence and counterfactual files.</div><Link to="/decision-analysis" className="mt-5 flex items-center justify-between rounded-xl border border-border p-4 hover:border-brand/40 hover:bg-surface-2"><div><p className="text-sm font-bold">Open the 1,628 decision points</p><p className="text-xs text-ink-3 mt-1">Choose an event and inspect its actual 360° state and alternatives.</p></div><ArrowRight size={17} className="text-brand"/></Link></div></Card></div>}
-function Metric({label,value}){return <div className="bg-surface p-4 sm:p-5"><p className="text-[10px] uppercase tracking-wider font-bold text-ink-3">{label}</p><p className="text-xl font-bold font-mono mt-1">{value}</p></div>}
+export default function Matches() {
+  const { data, loading, error } = useFootballData();
+
+  if (loading) return <Loading />;
+  if (error) return <DataError message={error} />;
+
+  const { match } = data;
+  const [home, away] = match.teams;
+
+  return (
+    <div>
+      <Toolbar title="Matches" meta="Fixtures processed into the counterfactual dataset" />
+
+      <Panel padded={false} className="mb-4">
+        <Link
+          to="/decision-analysis"
+          className="flex items-center gap-4 px-4 py-4 hover:bg-panel-2"
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <span className="cond w-11 text-right text-[16px] text-ink">{teamCode(home)}</span>
+            <span className="cond num rounded-[3px] bg-panel-3 px-2.5 py-1 text-[17px] leading-none text-ink">
+              {match.score[home] ?? 0} – {match.score[away] ?? 0}
+            </span>
+            <span className="cond w-11 text-[16px] text-ink">{teamCode(away)}</span>
+            <span className="ml-3 hidden truncate text-[13px] text-ink-2 sm:block">
+              {home} v {away}
+            </span>
+          </div>
+          <Tag tone="pos">360° available</Tag>
+          <ChevronRight size={16} className="shrink-0 text-ink-3" />
+        </Link>
+
+        <table className="w-full border-collapse border-t border-line-2">
+          <thead>
+            <tr>
+              <Th>Match</Th>
+              <Th align="right">Possessions</Th>
+              <Th align="right">Events</Th>
+              <Th align="right">Decisions</Th>
+              <Th align="right">Players</Th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <Td className="num text-ink-3">{match.id}</Td>
+              <Td align="right">{match.possessions.toLocaleString()}</Td>
+              <Td align="right">{match.actions.toLocaleString()}</Td>
+              <Td align="right">{match.decisions.toLocaleString()}</Td>
+              <Td align="right">{data.players.length}</Td>
+            </tr>
+          </tbody>
+        </table>
+      </Panel>
+
+      <Panel>
+        <p className="text-[13px] leading-relaxed text-ink-2">
+          One match is loaded. To add another, drop its sequence and counterfactual files into{' '}
+          <code className="rounded-[2px] bg-panel-2 px-1">public/data/</code> and point the two URLs
+          at the top of <code className="rounded-[2px] bg-panel-2 px-1">data/footballData.js</code>{' '}
+          at them.
+        </p>
+      </Panel>
+    </div>
+  );
+}
